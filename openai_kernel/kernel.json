@@ -1,0 +1,8 @@
+{
+    "argv": ["python",
+             "-m", "openai_kernel",
+             "-f", "{connection_file}"],
+    "display_name": "OpenAI",
+    "language": "openai",
+    "name": "openai"
+}
