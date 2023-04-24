@@ -43,7 +43,7 @@ class OpenAIKernel(MetaKernel):
 
     def __init__(self, *args, **kwargs):
         self.variables = {
-            "initial_system": "You are a helpful assistant.",
+            "system_prompt": "You are a helpful assistant.",
             "model": "gpt-3.5-turbo",
         }
         super(OpenAIKernel, self).__init__(*args, **kwargs)
@@ -74,7 +74,7 @@ class OpenAIKernel(MetaKernel):
 
     @property
     def history(self):
-        return [{"role": "system", "content": self.variables["initial_system"]}] + self._history
+        return [{"role": "system", "content": self.variables["system_prompt"]}] + self._history
     
     def get_variable(self, name):
         if hasattr(self, name):
