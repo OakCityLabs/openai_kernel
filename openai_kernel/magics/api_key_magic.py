@@ -1,5 +1,6 @@
 from metakernel import Magic
 
+
 class ApiKeyMagic(Magic):
     def line_api_key(self, value):
         """
@@ -15,4 +16,4 @@ class ApiKeyMagic(Magic):
 
 
 def register_magics(kernel):
-   kernel.register_magics(ApiKeyMagic)
+    kernel.register_magics(ApiKeyMagic)
