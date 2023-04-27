@@ -4,12 +4,15 @@ import jupyter_kernel_test
 
 
 class OpenAIKernelTests(jupyter_kernel_test.KernelTests):
-    kernel_name = "openai"
+    kernel_name = "mock_openai"
     language_name = "text"
+
+    code_execute_result = [{"code": "hey there", "mime": "text/markdown", "result": "you said 'hey there'"}]
+    code_generate_error = "throw a connection_error"
 
     def test_openai_no_api_key(self):
         self.flush_channels()
-        reply, output_msgs = self.execute_helper(code="its high noon")
+        reply, output_msgs = self.execute_helper(code="no_api_key but its high noon")
         self.assertEqual(output_msgs[0]["header"]["msg_type"], "error")
         self.assertEqual(
             output_msgs[0]["content"]["ename"],
@@ -23,10 +26,22 @@ class OpenAIKernelTests(jupyter_kernel_test.KernelTests):
             "OPENAI_API_KEY or OPENAI_API_KEY_PATH environment variables"
         )
 
+    def test_openai_connection_error(self):
+        self.flush_channels()
+        reply, output_msgs = self.execute_helper(code="connection_error please")
+        self.assertEqual(output_msgs[0]["header"]["msg_type"], "error")
+        self.assertEqual(
+            output_msgs[0]["content"]["ename"],
+            "<class 'requests.exceptions.ConnectionError'>",
+        )
+        assert output_msgs[0]["content"]["traceback"][0].startswith(
+            "Something went wrong communicating with the OpenAI API"
+        )
+
     def test_openai_set_api_key_magic(self):
         """
-        Set API key path using line magic, setting api key using magic clears
-        api_key_path
+        Set API key path using line magic.
+        Set API key using line magic, clears api_key_path.
         """
         self.flush_channels()
         reply, output_msgs = self.execute_helper(code="%api_key_path /path/to/sekrit")

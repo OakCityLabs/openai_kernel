@@ -4,10 +4,22 @@ import sys
 import traceback
 
 import openai
+from openai.error import AuthenticationError
 import requests
 from metakernel import ExceptionWrapper, MetaKernel
 
 from .version import __version__
+
+
+class OpenAIChatOutput:
+    def __init__(self, text):
+        self.text = text
+
+    def _repr_markdown_(self):
+        return self.text
+
+    def __repr__(self):
+        return self.text
 
 
 def get_kernel_json():
@@ -47,30 +59,31 @@ class OpenAIKernel(MetaKernel):
             "model": "gpt-3.5-turbo",
         }
         super(OpenAIKernel, self).__init__(*args, **kwargs)
+        self.openai = openai
         self.kernel_json = get_kernel_json()
         self._history = []
 
-        if openai.api_key is None and openai.api_key_path is None:
+        if self.openai.api_key is None and self.openai.api_key_path is None:
             default_api_key_path = get_default_api_key_path()
             if default_api_key_path:
-                openai.api_key_path = default_api_key_path
+                self.openai.api_key_path = default_api_key_path
 
     @property
     def api_key(self):
-        return openai.api_key
+        return self.openai.api_key
 
     @api_key.setter
     def api_key(self, key):
-        openai.api_key_path = None
-        openai.api_key = key
+        self.openai.api_key_path = None
+        self.openai.api_key = key
 
     @property
     def api_key_path(self):
-        return openai.api_key_path
+        return self.openai.api_key_path
 
     @api_key_path.setter
     def api_key_path(self, path):
-        openai.api_key_path = path
+        self.openai.api_key_path = path
 
     @property
     def history(self):
@@ -94,16 +107,16 @@ class OpenAIKernel(MetaKernel):
 
     def do_execute_direct(self, code, silent=False):
         msg = {"role": "user", "content": code}
-        resp_content = code
         try:
-            resp = openai.ChatCompletion.create(
+            resp = self.openai.ChatCompletion.create(
                 model=self.variables["model"], messages=self.history + [msg]
             )
-            resp_content = resp.choices[0].message.content
+            message = resp["choices"][0]["message"]["content"]
+            resp_content = OpenAIChatOutput(message)
             self._history += [msg]
-            self._history += [{"role": "assistant", "content": resp_content}]
+            self._history += [{"role": "assistant", "content": message}]
         except Exception as e:
-            if isinstance(e, openai.error.AuthenticationError):
+            if isinstance(e, AuthenticationError):
                 if "No API key provided" in e.user_message:
                     message = (
                         "No OpenAI API key provided, set your API key by using the "
@@ -114,26 +127,17 @@ class OpenAIKernel(MetaKernel):
                     )
                 else:
                     message = e.user_message
-                resp_content = ExceptionWrapper(
-                    str(type(e)),
-                    str(e),
-                    [message + "\n"] + traceback.format_tb(e.__traceback__),
-                )
             elif isinstance(e, requests.exceptions.ConnectionError):
                 message = (
                     "Something went wrong communicating with the OpenAI API, "
                     "please try again"
                 )
-                resp_content = ExceptionWrapper(
-                    str(type(e)),
-                    str(e),
-                    [message + "\n"] + traceback.format_tb(e.__traceback__),
-                )
             else:
-                resp_content = ExceptionWrapper(
-                    str(type(e)),
-                    str(e),
-                    [str(type(e))] + traceback.format_tb(e.__traceback__),
-                )
+                message = str(e)
+            resp_content = ExceptionWrapper(
+                str(type(e)),
+                str(e),
+                [message + "\n"] + traceback.format_tb(e.__traceback__),
+            )
         if not silent:
             return resp_content

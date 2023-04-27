@@ -1,7 +1,8 @@
-.PHONY: test format
+.PHONY: test format lint
 
 test:
-	python tests/test_kernel.py
+	python -m openai_kernel.mock_kernel install
+	python tests/jkt_test_kernel.py
 
 format:
 	isort --force-single-line-imports openai_kernel tests
