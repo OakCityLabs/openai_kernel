@@ -1,6 +1,7 @@
 from metakernel import Magic
 
-class ApiKeyMagic(Magic):
+
+class OpenAIApiMagic(Magic):
     def line_api_key(self, value):
         """
         %api_key API_KEY - set OpenAI API key.
@@ -13,6 +14,12 @@ class ApiKeyMagic(Magic):
         """
         self.kernel.api_key_path = value
 
+    def line_organization(self, value):
+        """
+        %organization ORGANIZATION - set organization for OpenAI API.
+        """
+        self.kernel.organization = value
+
 
 def register_magics(kernel):
-   kernel.register_magics(ApiKeyMagic)
+    kernel.register_magics(OpenAIApiMagic)
