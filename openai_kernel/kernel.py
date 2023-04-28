@@ -7,6 +7,8 @@ import openai
 from openai.error import AuthenticationError
 import requests
 from metakernel import ExceptionWrapper, MetaKernel
+from IPython.display import Image
+import base64
 
 from .version import __version__
 from .outputs import MarkdownOutput
@@ -49,8 +51,11 @@ class OpenAIKernel(MetaKernel):
             "model": "gpt-3.5-turbo",
             "temperature": 1,
             "chat_kwargs": {},
+            "size": "512x512",
+            "n": 1,
         }
         super(OpenAIKernel, self).__init__(*args, **kwargs)
+        self.mode = "chat"
         self.use_history = True
         self.openai = openai
         self.kernel_json = get_kernel_json()
@@ -115,39 +120,56 @@ class OpenAIKernel(MetaKernel):
             self.use_history = bool(value)
         elif name == "history":
             self._history = value
+        elif name == "mode":
+            if value == "chat":
+                self.mode = "chat"
+            elif value == "image":
+                self.mode = "image"
         else:
             self.variables[name] = value
 
     def do_execute_direct(self, code, silent=False):
-        msg = {"role": "user", "content": code}
+        resp_content = None
         try:
-            chat_kwargs = self.variables.get("chat_kwargs", {})
-            messages = self.history + [msg]
+            if self.mode == "chat":
+                msg = {"role": "user", "content": code}
+                chat_kwargs = self.variables.get("chat_kwargs", {})
+                messages = self.history + [msg]
 
-            resp = self.openai.ChatCompletion.create(
-                model=self.variables["model"],
-                messages=messages,
-                temperature=self.variables["temperature"],
-                **chat_kwargs
-            )
-            choice = resp["choices"][0]
-            finish_reason = choice["finish_reason"]
-            message_content = choice["message"]["content"]
-            if finish_reason == "length":
-                message_content = (
-                    "This response was truncated due to the token limit. To get a "
-                    "complete response, you can try clearing the chat history with "
-                    "`%clear_history`, setting the history manually with `%set history "
-                    "[{\"role\": \"user\", \"content\": \"your content here\"}, {\"role"
-                    "\": \"assistant\", \"content\": \"example response\"}]`, or "
-                    "turning off history with `%set use_history False`. You can view "
-                    "history with `%history`\n"
-                ) + message_content
-            elif finish_reason == "content_filter":
-                message_content = "This message was flagged for inappropriate content"
-            resp_content = MarkdownOutput(message_content)
-            self._history += [msg]
-            self._history += [{"role": "assistant", "content": message_content}]
+                resp = self.openai.ChatCompletion.create(
+                    model=self.variables["model"],
+                    messages=messages,
+                    temperature=self.variables["temperature"],
+                    **chat_kwargs
+                )
+                choice = resp["choices"][0]
+                finish_reason = choice["finish_reason"]
+                message_content = choice["message"]["content"]
+                if finish_reason == "length":
+                    message_content = (
+                        "This response was truncated due to the token limit. To get a "
+                        "complete response, you can try clearing the chat history with "
+                        "`%clear_history`, setting the history manually with `%set history "
+                        "[{\"role\": \"user\", \"content\": \"your content here\"}, {\"role"
+                        "\": \"assistant\", \"content\": \"example response\"}]`, or "
+                        "turning off history with `%set use_history False`. You can view "
+                        "history with `%history`\n"
+                    ) + message_content
+                elif finish_reason == "content_filter":
+                    message_content = "This message was flagged for inappropriate content"
+                resp_content = MarkdownOutput(message_content)
+                self._history += [msg]
+                self._history += [{"role": "assistant", "content": message_content}]
+            elif self.mode == "image":
+                resp = openai.Image.create(
+                    prompt=code,
+                    n=self.variables["n"],
+                    size=self.variables["size"],
+                    response_format="b64_json",
+                )
+                for i, img in enumerate(resp["data"]):
+                    self.Display(Image(data=base64.b64decode(img["b64_json"]), format="png", alt=f"{code} generated image {i}"))
+
         except Exception as e:
             if isinstance(e, AuthenticationError):
                 if "No API key provided" in e.user_message:
