@@ -1,4 +1,3 @@
-
 class MarkdownOutput:
     def __init__(self, text, markdown=None):
         self.text = text

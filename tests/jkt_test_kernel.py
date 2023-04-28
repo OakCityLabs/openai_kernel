@@ -7,7 +7,9 @@ class OpenAIKernelTests(jupyter_kernel_test.KernelTests):
     kernel_name = "mock_openai"
     language_name = "text"
 
-    code_execute_result = [{"code": "hey there", "mime": "text/markdown", "result": "you said 'hey there'"}]
+    code_execute_result = [
+        {"code": "hey there", "mime": "text/markdown", "result": "you said 'hey there'"}
+    ]
     code_generate_error = "throw a connection_error"
 
     def test_openai_no_api_key(self):

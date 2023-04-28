@@ -2,7 +2,6 @@ from metakernel import Magic
 
 
 class ClearHistoryMagic(Magic):
-
     def line_clear_history(self):
         """
         %clear_history - Clear OpenAI chat history

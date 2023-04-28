@@ -5,8 +5,11 @@ from openai_kernel.outputs import MarkdownOutput
 
 class HistoryMagic(Magic):
     @option(
-        "-r", "--raw", action="store_true", default=False,
-        help="Print history in a raw format"
+        "-r",
+        "--raw",
+        action="store_true",
+        default=False,
+        help="Print history in a raw format",
     )
     def line_history(self, raw=False):
         """

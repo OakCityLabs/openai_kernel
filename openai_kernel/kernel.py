@@ -1,17 +1,17 @@
+import base64
 import json
 import os
 import sys
 import traceback
 
 import openai
-from openai.error import AuthenticationError
 import requests
-from metakernel import ExceptionWrapper, MetaKernel
 from IPython.display import Image
-import base64
+from metakernel import ExceptionWrapper, MetaKernel
+from openai.error import AuthenticationError
 
-from .version import __version__
 from .outputs import MarkdownOutput
+from .version import __version__
 
 
 def get_kernel_json():
@@ -95,11 +95,13 @@ class OpenAIKernel(MetaKernel):
     def history(self):
         msg_list = []
         if self.variables["system_prompt"]:
-            msg_list.append({"role": "system", "content": self.variables["system_prompt"]})
+            msg_list.append(
+                {"role": "system", "content": self.variables["system_prompt"]}
+            )
         if self.use_history:
             msg_list.extend(self._history)
         return msg_list
-    
+
     def clear_history(self):
         self._history = []
 
@@ -140,7 +142,7 @@ class OpenAIKernel(MetaKernel):
                     model=self.variables["model"],
                     messages=messages,
                     temperature=self.variables["temperature"],
-                    **chat_kwargs
+                    **chat_kwargs,
                 )
                 choice = resp["choices"][0]
                 finish_reason = choice["finish_reason"]
@@ -149,14 +151,16 @@ class OpenAIKernel(MetaKernel):
                     message_content = (
                         "This response was truncated due to the token limit. To get a "
                         "complete response, you can try clearing the chat history with "
-                        "`%clear_history`, setting the history manually with `%set history "
-                        "[{\"role\": \"user\", \"content\": \"your content here\"}, {\"role"
-                        "\": \"assistant\", \"content\": \"example response\"}]`, or "
-                        "turning off history with `%set use_history False`. You can view "
-                        "history with `%history`\n"
+                        "`%clear_history`, setting the history manually with `%set "
+                        'history [{"role": "user", "content": "your content here"}, '
+                        '{"role": "assistant", "content": "example response"}]`, or '
+                        "turning off history with `%set use_history False`. You can "
+                        "view history with `%history`\n"
                     ) + message_content
                 elif finish_reason == "content_filter":
-                    message_content = "This message was flagged for inappropriate content"
+                    message_content = (
+                        "This message was flagged for inappropriate content"
+                    )
                 resp_content = MarkdownOutput(message_content)
                 self._history += [msg]
                 self._history += [{"role": "assistant", "content": message_content}]
@@ -168,7 +172,13 @@ class OpenAIKernel(MetaKernel):
                     response_format="b64_json",
                 )
                 for i, img in enumerate(resp["data"]):
-                    self.Display(Image(data=base64.b64decode(img["b64_json"]), format="png", alt=f"{code} generated image {i}"))
+                    self.Display(
+                        Image(
+                            data=base64.b64decode(img["b64_json"]),
+                            format="png",
+                            alt=f"{code} generated image {i}",
+                        )
+                    )
 
         except Exception as e:
             if isinstance(e, AuthenticationError):
