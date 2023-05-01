@@ -206,3 +206,22 @@ class OpenAIKernel(MetaKernel):
             )
         if not silent:
             return resp_content
+
+    def get_usage(self):
+        return """Welcome to the OpenAI jupyter kernel.
+To get started, set your API key by using the 'magic' commands '%api_key API_KEY' or '%api_key_path PATH_TO_API_KEY', creating a .openai_api_key file in your home directory, or by setting the OPENAI_API_KEY or OPENAI_API_KEY_PATH environment variables.
+You can set the OpenAI organization via '%organization ORGANIZATION'.
+        
+This kernel has 2 modes, "chat" and "image". You can change the mode via the mode magic command ('%mode chat').
+
+In chat mode you can talk to Chat GPT by typing your query in a cell and running it.
+You can tweak the settings with the following magic commands.
+Set the model to use with '%set model gpt-3.5-turbo', set the temperature with '%set temperature 1' (between 0-1). Set the initial system message using '%set system_prompt you are a bot' (you can also set it to None to remove it).
+By default the kernel sends chat history with each request, contibuting to the models token limit. View chat history using '%history'. Clear chat history with '%clear_history'.
+You can disable history using '%set use_history False'.
+You can also set the history manually using '%set history [{"role": "user", "content": "hello bot"}, {"role": "assistant", "content": "hi user"}]'. The history commands can be useful if you hit the model's token limit (https://help.openai.com/en/articles/4936856-what-are-tokens-and-how-to-count-them#).
+Any other chat arguments you wish to set can be set with '%set chat_kwargs {"frequency_penalty": 1}'
+
+In image mode you can generate images by typing a prompt in a cell and running it.
+Set image size using '%set size 1024x1024' (one of 256x256, 512x512, or 1024x1024).
+Set number of images generated using '%set n 5' (between 1-10)"""  # noqa
