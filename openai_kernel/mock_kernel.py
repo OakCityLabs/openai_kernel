@@ -34,7 +34,7 @@ class MockOpenAIKernel(OpenAIKernel):
         mock_openai.api_key = None
         mock_openai.api_key_path = None
 
-        def chat_completion_create(model, messages):
+        def chat_completion_create(model, messages, **kwargs):
             content = messages[-1]["content"]
 
             if "no_api_key" in content:
