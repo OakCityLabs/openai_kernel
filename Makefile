@@ -1,7 +1,7 @@
 .PHONY: test format lint
 
 test:
-	python -m openai_kernel.mock_kernel install
+	python -m openai_kernel.mock_kernel install --user
 	python tests/jkt_test_kernel.py
 
 format:
