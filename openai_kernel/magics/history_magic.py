@@ -22,7 +22,7 @@ class HistoryMagic(Magic):
         if not self.raw:
             markdown = ""
             for msg in self.retval:
-                markdown += f"{msg}<br />"
+                markdown += f"{msg}  \n"
             return MarkdownOutput(str(retval), markdown)
         else:
             return self.retval

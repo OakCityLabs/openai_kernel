@@ -13,6 +13,7 @@ setuptools.setup(
     author="Oak City Labs",
     author_email="team@oakcity.io",
     description="OpenAI jupyter kernel",
+    url="https://github.com/OakCityLabs/openai_kernel",
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),

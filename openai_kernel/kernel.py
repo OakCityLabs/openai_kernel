@@ -65,6 +65,7 @@ class OpenAIKernel(MetaKernel):
             default_api_key_path = get_default_api_key_path()
             if default_api_key_path:
                 self.openai.api_key_path = default_api_key_path
+                self.api_key_path = default_api_key_path
 
     @property
     def api_key(self):
@@ -81,6 +82,9 @@ class OpenAIKernel(MetaKernel):
 
     @api_key_path.setter
     def api_key_path(self, path):
+        if path.startswith("~/"):
+            home = os.path.expanduser("~")
+            path = os.path.join(home, path[2:])
         self.openai.api_key_path = path
 
     @property
